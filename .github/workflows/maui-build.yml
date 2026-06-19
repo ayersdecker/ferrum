@@ -32,7 +32,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-24.04, macos-15]
+        os: [macos-15]
 
     steps:
       - uses: actions/checkout@v4
@@ -93,8 +93,8 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Install MAUI workload
-        run: dotnet workload install maui
+      - name: Install Android workload
+        run: dotnet workload install android
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
