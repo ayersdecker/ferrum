@@ -19,6 +19,9 @@ on:
       - '.github/workflows/codegen-tests.yml'
       - 'Directory.Build.props'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test (.NET ${{ matrix.dotnet }})

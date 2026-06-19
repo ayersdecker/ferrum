@@ -68,6 +68,15 @@ cmake --build "${BUILD_ROOT}/sim-x86_64" --config Release --target "${TARGET}"
 echo "==> Creating fat simulator library ..."
 SIM_ARM64="${BUILD_ROOT}/sim-arm64/Release-iphonesimulator/lib${TARGET}.a"
 SIM_X86="${BUILD_ROOT}/sim-x86_64/Release-iphonesimulator/lib${TARGET}.a"
+
+for LIB in "${SIM_ARM64}" "${SIM_X86}"; do
+    if [[ ! -f "${LIB}" ]]; then
+        echo "ERROR: Expected library not found: ${LIB}"
+        echo "       Check that the cmake --build step succeeded for that slice."
+        exit 1
+    fi
+done
+
 FAT_SIM="${BUILD_ROOT}/sim-fat/lib${TARGET}.a"
 mkdir -p "${BUILD_ROOT}/sim-fat"
 lipo -create "${SIM_ARM64}" "${SIM_X86}" -output "${FAT_SIM}"

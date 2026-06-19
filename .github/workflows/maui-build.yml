@@ -22,6 +22,9 @@ on:
       - '.github/workflows/maui-build.yml'
       - 'Directory.Build.props'
 
+permissions:
+  contents: read
+
 jobs:
   # ── Framework library build ────────────────────────────────────────────────
   framework:
