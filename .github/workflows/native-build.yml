@@ -47,7 +47,7 @@ jobs:
         run: |
           cmake -S native \
                 -B .build/ios/${{ matrix.label }} \
-                -DCMAKE_TOOLCHAIN_FILE=native/cmake/ios.toolchain.cmake \
+                -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/native/cmake/ios.toolchain.cmake" \
                 -DPLATFORM=${{ matrix.platform }} \
                 -DDEPLOYMENT_TARGET=15.0 \
                 -DCMAKE_BUILD_TYPE=Release \
