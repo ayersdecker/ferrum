@@ -1,0 +1,146 @@
+name: Native Build (iOS & Android)
+
+# Builds the native static/shared libraries for all supported platforms and
+# ABIs, then uploads the artifacts for use by the MAUI build workflow.
+#
+# Triggered on every push and pull request that touches native code or the
+# build scripts.
+
+on:
+  push:
+    paths:
+      - 'native/**'
+      - '.github/workflows/native-build.yml'
+  pull_request:
+    paths:
+      - 'native/**'
+      - '.github/workflows/native-build.yml'
+
+jobs:
+  # ── iOS XCFramework ────────────────────────────────────────────────────────
+  ios:
+    name: iOS XCFramework (${{ matrix.platform }})
+    runs-on: macos-15
+    strategy:
+      matrix:
+        include:
+          - platform: OS64
+            sysroot: iphoneos
+            label: device-arm64
+          - platform: SIMULATORARM64
+            sysroot: iphonesimulator
+            label: sim-arm64
+          - platform: SIMULATOR64
+            sysroot: iphonesimulator
+            label: sim-x86_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_16.2.app
+
+      - name: Configure CMake
+        run: |
+          cmake -S native \
+                -B .build/ios/${{ matrix.label }} \
+                -DCMAKE_TOOLCHAIN_FILE=native/cmake/ios.toolchain.cmake \
+                -DPLATFORM=${{ matrix.platform }} \
+                -DDEPLOYMENT_TARGET=15.0 \
+                -DCMAKE_BUILD_TYPE=Release \
+                -GXcode
+
+      - name: Build
+        run: |
+          cmake --build .build/ios/${{ matrix.label }} \
+                --config Release \
+                --target ferrum_test_stub
+
+      - name: Upload slice artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ matrix.label }}
+          path: .build/ios/${{ matrix.label }}/Release-${{ matrix.sysroot }}/libferrum_test_stub.a
+
+  # Assemble the full XCFramework from the three slices
+  ios-xcframework:
+    name: Assemble XCFramework
+    runs-on: macos-15
+    needs: ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-device-arm64
+          path: .slices/device
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-sim-arm64
+          path: .slices/sim-arm64
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-sim-x86_64
+          path: .slices/sim-x86_64
+
+      - name: Create fat simulator library
+        run: |
+          lipo -create \
+            .slices/sim-arm64/libferrum_test_stub.a \
+            .slices/sim-x86_64/libferrum_test_stub.a \
+            -output .slices/sim-fat/libferrum_test_stub.a
+
+      - name: Create XCFramework
+        run: |
+          mkdir -p artifacts/ios
+          xcodebuild -create-xcframework \
+            -library .slices/device/libferrum_test_stub.a \
+            -library .slices/sim-fat/libferrum_test_stub.a \
+            -output artifacts/ios/libferrum_test_stub.xcframework
+
+      - name: Upload XCFramework
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-xcframework
+          path: artifacts/ios/libferrum_test_stub.xcframework
+
+  # ── Android .so per ABI ────────────────────────────────────────────────────
+  android:
+    name: Android (${{ matrix.abi }})
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        abi: [arm64-v8a, armeabi-v7a, x86_64, x86]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: sdkmanager "ndk;27.2.12479018"
+
+      - name: Configure CMake
+        run: |
+          NDK_ROOT="${ANDROID_SDK_ROOT}/ndk/27.2.12479018"
+          cmake -S native \
+                -B .build/android/${{ matrix.abi }} \
+                -DCMAKE_TOOLCHAIN_FILE="${NDK_ROOT}/build/cmake/android.toolchain.cmake" \
+                -DANDROID_ABI=${{ matrix.abi }} \
+                -DANDROID_PLATFORM=android-24 \
+                -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cmake --build .build/android/${{ matrix.abi }} \
+                --config Release \
+                --target ferrum_test_stub
+
+      - name: Upload .so artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ matrix.abi }}
+          path: .build/android/${{ matrix.abi }}/libferrum_test_stub.a

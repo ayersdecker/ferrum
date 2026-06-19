@@ -1,0 +1,103 @@
+name: MAUI Build
+
+# Builds the Ferrum.Framework library and the MinimalDemo sample app.
+# The iOS build requires macOS; Android can be built on ubuntu.
+#
+# NOTE: The native libraries (XCFramework / .so) must already be available
+# as artifacts from the native-build workflow before this workflow can
+# produce a fully linkable app binary.  In the absence of the native libs,
+# this workflow validates that the managed code compiles cleanly.
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'samples/**'
+      - '.github/workflows/maui-build.yml'
+      - 'Directory.Build.props'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'samples/**'
+      - '.github/workflows/maui-build.yml'
+      - 'Directory.Build.props'
+
+jobs:
+  # ── Framework library build ────────────────────────────────────────────────
+  framework:
+    name: Framework (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Build Ferrum.Framework (all TFMs)
+        run: |
+          dotnet build src/Framework/Ferrum.Framework.csproj \
+            -c Release
+
+  # ── MAUI iOS build ─────────────────────────────────────────────────────────
+  ios-maui:
+    name: MAUI iOS build
+    runs-on: macos-15
+    needs: framework
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_16.2.app
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Build MinimalDemo (iOS — no signing)
+        run: |
+          dotnet build samples/MinimalDemo/MinimalDemo.csproj \
+            -f net9.0-ios \
+            -c Release \
+            /p:RuntimeIdentifier=ios-arm64 \
+            /p:CodesignKey="" \
+            /p:CodesignProvision=""
+
+  # ── MAUI Android build ─────────────────────────────────────────────────────
+  android-maui:
+    name: MAUI Android build
+    runs-on: ubuntu-24.04
+    needs: framework
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build MinimalDemo (Android)
+        run: |
+          dotnet build samples/MinimalDemo/MinimalDemo.csproj \
+            -f net9.0-android \
+            -c Release

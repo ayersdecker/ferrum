@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      Multi-target the library so consumers get the right platform binding.
+      Set FerrumSkipMobile=true when building without the mobile workloads
+      (e.g. in the codegen/unit-test CI job that runs on ubuntu without MAUI):
+        dotnet build -p:FerrumSkipMobile=true
+    -->
+    <TargetFrameworks Condition="'$(FerrumSkipMobile)' != 'true'">net9.0;net9.0-ios;net9.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="'$(FerrumSkipMobile)' == 'true'">net9.0</TargetFrameworks>
+    <RootNamespace>Ferrum.Framework</RootNamespace>
+    <AssemblyName>Ferrum.Framework</AssemblyName>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- NuGet packaging metadata -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Ferrum.Framework</PackageId>
+    <Version>0.1.0-alpha</Version>
+    <Authors>Ferrum Contributors</Authors>
+    <Description>
+      Native-compute interop framework for .NET MAUI. Provides zero-copy buffer
+      abstractions and [LibraryImport]-based P/Invoke helpers for calling into
+      C/C++ static libraries on iOS and Android. NativeAOT-compatible.
+    </Description>
+    <PackageTags>maui;ios;android;native;interop;pinvoke;nativeaot</PackageTags>
+    <RepositoryUrl>https://github.com/ayersdecker/ferrum</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- NativeAOT: ensure no reflection-based code sneaks in. -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == 'iOS'">
+    <UseInterpreter>false</UseInterpreter>
+  </PropertyGroup>
+
+</Project>
