@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Ferrum Contributors",
+  "classifications": [ ".NET MAUI", "Mobile", "Native Interop", "iOS", "Android" ],
+  "identity": "Ferrum.Template.MauiApp",
+  "name": "Ferrum MAUI App",
+  "shortName": "maui-ferrum",
+  "description": "A .NET MAUI app preconfigured with Ferrum for native C/C++ interop on iOS and Android.",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "FerrumApp",
+  "preferNameDirectory": true,
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "net9.0",
+          "description": "Target .NET 9.0"
+        }
+      ],
+      "replaces": "net9.0",
+      "defaultValue": "net9.0"
+    },
+    "ApplicationId": {
+      "type": "parameter",
+      "description": "The application identifier (Android package name / iOS bundle ID).",
+      "datatype": "string",
+      "replaces": "com.ferrum.app",
+      "defaultValue": "com.company.appname"
+    },
+    "FerrumVersion": {
+      "type": "parameter",
+      "description": "Version of Ferrum.Framework to reference.",
+      "datatype": "string",
+      "replaces": "FERRUM_VERSION",
+      "defaultValue": "0.1.0-alpha"
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": [
+            "**/[Bb]in/**",
+            "**/[Oo]bj/**",
+            ".template.config/**/*",
+            ".vs/**/*",
+            "**/*.filelist",
+            "**/*.user",
+            "**/*.lock.json"
+          ]
+        }
+      ]
+    }
+  ],
+  "postActions": [
+    {
+      "description": "Restore NuGet packages",
+      "manualInstructions": [
+        { "text": "Run 'dotnet restore'" }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

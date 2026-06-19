@@ -32,6 +32,10 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <!-- NativeAOT: ensure no reflection-based code sneaks in. -->
   <PropertyGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == 'iOS'">
     <UseInterpreter>false</UseInterpreter>

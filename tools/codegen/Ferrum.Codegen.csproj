@@ -28,6 +28,11 @@
     <PackageTags>codegen;pinvoke;maui;nativeaot;interop</PackageTags>
     <RepositoryUrl>https://github.com/ayersdecker/ferrum</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>
