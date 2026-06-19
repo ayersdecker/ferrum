@@ -1,0 +1,102 @@
+name: Codegen Tool Tests
+
+# Builds the codegen tool and runs the unit-test suite (xUnit).
+# Runs on Linux (fast, cheap) and can be extended to macOS/Windows.
+
+on:
+  push:
+    paths:
+      - 'tools/codegen/**'
+      - 'src/Framework/**'
+      - 'src/Framework.Tests/**'
+      - '.github/workflows/codegen-tests.yml'
+      - 'Directory.Build.props'
+  pull_request:
+    paths:
+      - 'tools/codegen/**'
+      - 'src/Framework/**'
+      - 'src/Framework.Tests/**'
+      - '.github/workflows/codegen-tests.yml'
+      - 'Directory.Build.props'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (.NET ${{ matrix.dotnet }})
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        dotnet: ['9.0.x']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet }}
+
+      - name: Restore
+        run: |
+          FerrumSkipMobile=true dotnet restore tools/codegen/Ferrum.Codegen.csproj
+          FerrumSkipMobile=true dotnet restore src/Framework/Ferrum.Framework.csproj
+          FerrumSkipMobile=true dotnet restore src/Framework.Tests/Ferrum.Framework.Tests.csproj
+
+      - name: Build
+        run: |
+          FerrumSkipMobile=true dotnet build tools/codegen/Ferrum.Codegen.csproj   --no-restore -c Release
+          FerrumSkipMobile=true dotnet build src/Framework/Ferrum.Framework.csproj --no-restore -c Release
+          FerrumSkipMobile=true dotnet build src/Framework.Tests/Ferrum.Framework.Tests.csproj --no-restore -c Release
+
+      - name: Test
+        run: |
+          FerrumSkipMobile=true dotnet test src/Framework.Tests/Ferrum.Framework.Tests.csproj \
+            --no-build -c Release \
+            --logger "trx;LogFileName=test-results.trx" \
+            --logger "console;verbosity=normal"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.dotnet }}
+          path: '**/*.trx'
+
+  # Smoke-test the CLI: parse the in-tree add.h and verify zero exit code
+  codegen-smoke:
+    name: Codegen smoke test
+    runs-on: ubuntu-24.04
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build codegen
+        run: FerrumSkipMobile=true dotnet build tools/codegen/Ferrum.Codegen.csproj -c Release
+
+      - name: Run codegen on test stub header
+        run: |
+          FerrumSkipMobile=true dotnet run --project tools/codegen/Ferrum.Codegen.csproj \
+            --configuration Release \
+            -- \
+            --input  native/test_stub/include/add.h \
+            --output /tmp/AddBindings.cs \
+            --ns     Ferrum.Generated \
+            --class  AddBindings \
+            --lib    __Internal
+
+      - name: Verify output
+        run: |
+          echo "=== Generated bindings ==="
+          cat /tmp/AddBindings.cs
+          # Ensure [LibraryImport] and the function name are present
+          grep -q "\[LibraryImport" /tmp/AddBindings.cs
+          grep -q "ferrum_add"      /tmp/AddBindings.cs
+          echo "==> Smoke test passed"
