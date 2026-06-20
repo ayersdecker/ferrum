@@ -1,0 +1,9 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/draye/source/repos/ferrum/.build/android/arm64-v8a/cmake_install.cmake",
+		"C:/Users/draye/source/repos/ferrum/.build/android/arm64-v8a/test_stub/cmake_install.cmake",
+		"C:/Users/draye/source/repos/ferrum/.build/android/arm64-v8a/dsp_fixture/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

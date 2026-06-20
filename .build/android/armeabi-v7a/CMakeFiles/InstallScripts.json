@@ -1,0 +1,9 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/draye/source/repos/ferrum/.build/android/armeabi-v7a/cmake_install.cmake",
+		"C:/Users/draye/source/repos/ferrum/.build/android/armeabi-v7a/test_stub/cmake_install.cmake",
+		"C:/Users/draye/source/repos/ferrum/.build/android/armeabi-v7a/dsp_fixture/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
