@@ -16,6 +16,9 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 
+    <!-- Suppress MAUI implicit package reference warning -->
+    <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
+
     <!-- iOS: NativeAOT for AOT-compatible interop -->
     <PublishAot Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == 'iOS'">true</PublishAot>
   </PropertyGroup>

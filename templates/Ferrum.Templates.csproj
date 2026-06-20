@@ -19,6 +19,10 @@
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <ContentTargetFolders>content</ContentTargetFolders>
 
+    <!-- Disable default compile items to prevent template C# files from being compiled -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultItems>false</EnableDefaultItems>
+
     <PackageId>Ferrum.Templates</PackageId>
     <Version>0.1.0-alpha</Version>
     <Authors>Ferrum Contributors</Authors>
