@@ -16,8 +16,13 @@ include(cmake/ferrum_helpers.cmake)
 # without any external consumer source.  A real consumer would instead call
 #   ferrum_add_static_library(my_lib SOURCES ...) from their own CMakeLists.
 # ---------------------------------------------------------------------------
-option(FERRUM_BUILD_TEST_STUB "Build the in-tree add() test stub" ON)
+option(FERRUM_BUILD_TEST_STUB    "Build the in-tree add() test stub"    ON)
+option(FERRUM_BUILD_DSP_FIXTURE  "Build the in-tree DSP test fixture"   ON)
 
 if(FERRUM_BUILD_TEST_STUB)
     add_subdirectory(test_stub)
+endif()
+
+if(FERRUM_BUILD_DSP_FIXTURE)
+    add_subdirectory(dsp_fixture)
 endif()
