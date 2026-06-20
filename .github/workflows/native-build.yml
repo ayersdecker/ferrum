@@ -22,20 +22,37 @@ permissions:
 jobs:
   # ── iOS XCFramework ────────────────────────────────────────────────────────
   ios:
-    name: iOS XCFramework (${{ matrix.platform }})
+    name: iOS XCFramework (${{ matrix.platform }}, ${{ matrix.target }})
     runs-on: macos-15
     strategy:
       matrix:
         include:
+          # test_stub slices
           - platform: OS64
             sysroot: iphoneos
             label: device-arm64
+            target: ferrum_test_stub
           - platform: SIMULATORARM64
             sysroot: iphonesimulator
             label: sim-arm64
+            target: ferrum_test_stub
           - platform: SIMULATOR64
             sysroot: iphonesimulator
             label: sim-x86_64
+            target: ferrum_test_stub
+          # dsp_fixture slices
+          - platform: OS64
+            sysroot: iphoneos
+            label: dsp-device-arm64
+            target: ferrum_dsp_fixture
+          - platform: SIMULATORARM64
+            sysroot: iphonesimulator
+            label: dsp-sim-arm64
+            target: ferrum_dsp_fixture
+          - platform: SIMULATOR64
+            sysroot: iphonesimulator
+            label: dsp-sim-x86_64
+            target: ferrum_dsp_fixture
 
     steps:
       - uses: actions/checkout@v4
@@ -57,65 +74,78 @@ jobs:
         run: |
           cmake --build .build/ios/${{ matrix.label }} \
                 --config Release \
-                --target ferrum_test_stub
+                --target ${{ matrix.target }}
 
       - name: Upload slice artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-${{ matrix.label }}
-          path: .build/ios/${{ matrix.label }}/Release-${{ matrix.sysroot }}/libferrum_test_stub.a
+          path: .build/ios/${{ matrix.label }}/Release-${{ matrix.sysroot }}/lib${{ matrix.target }}.a
 
-  # Assemble the full XCFramework from the three slices
+  # Assemble the full XCFramework from the three slices (per target)
   ios-xcframework:
-    name: Assemble XCFramework
+    name: Assemble XCFramework (${{ matrix.target }})
     runs-on: macos-15
     needs: ios
+    strategy:
+      matrix:
+        include:
+          - target: ferrum_test_stub
+            device_label: device-arm64
+            sim_arm64_label: sim-arm64
+            sim_x86_label: sim-x86_64
+          - target: ferrum_dsp_fixture
+            device_label: dsp-device-arm64
+            sim_arm64_label: dsp-sim-arm64
+            sim_x86_label: dsp-sim-x86_64
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/download-artifact@v4
         with:
-          name: ios-device-arm64
-          path: .slices/device
+          name: ios-${{ matrix.device_label }}
+          path: .slices/${{ matrix.target }}/device
 
       - uses: actions/download-artifact@v4
         with:
-          name: ios-sim-arm64
-          path: .slices/sim-arm64
+          name: ios-${{ matrix.sim_arm64_label }}
+          path: .slices/${{ matrix.target }}/sim-arm64
 
       - uses: actions/download-artifact@v4
         with:
-          name: ios-sim-x86_64
-          path: .slices/sim-x86_64
+          name: ios-${{ matrix.sim_x86_label }}
+          path: .slices/${{ matrix.target }}/sim-x86_64
 
       - name: Create fat simulator library
         run: |
+          mkdir -p .slices/${{ matrix.target }}/sim-fat
           lipo -create \
-            .slices/sim-arm64/libferrum_test_stub.a \
-            .slices/sim-x86_64/libferrum_test_stub.a \
-            -output .slices/sim-fat/libferrum_test_stub.a
+            .slices/${{ matrix.target }}/sim-arm64/lib${{ matrix.target }}.a \
+            .slices/${{ matrix.target }}/sim-x86_64/lib${{ matrix.target }}.a \
+            -output .slices/${{ matrix.target }}/sim-fat/lib${{ matrix.target }}.a
 
       - name: Create XCFramework
         run: |
           mkdir -p artifacts/ios
           xcodebuild -create-xcframework \
-            -library .slices/device/libferrum_test_stub.a \
-            -library .slices/sim-fat/libferrum_test_stub.a \
-            -output artifacts/ios/libferrum_test_stub.xcframework
+            -library .slices/${{ matrix.target }}/device/lib${{ matrix.target }}.a \
+            -library .slices/${{ matrix.target }}/sim-fat/lib${{ matrix.target }}.a \
+            -output artifacts/ios/lib${{ matrix.target }}.xcframework
 
       - name: Upload XCFramework
         uses: actions/upload-artifact@v4
         with:
-          name: ios-xcframework
-          path: artifacts/ios/libferrum_test_stub.xcframework
+          name: ios-xcframework-${{ matrix.target }}
+          path: artifacts/ios/lib${{ matrix.target }}.xcframework
 
   # ── Android .so per ABI ────────────────────────────────────────────────────
   android:
-    name: Android (${{ matrix.abi }})
+    name: Android (${{ matrix.abi }}, ${{ matrix.target }})
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         abi: [arm64-v8a, armeabi-v7a, x86_64, x86]
+        target: [ferrum_test_stub, ferrum_dsp_fixture]
 
     steps:
       - uses: actions/checkout@v4
@@ -130,7 +160,7 @@ jobs:
         run: |
           NDK_ROOT="${ANDROID_SDK_ROOT}/ndk/27.2.12479018"
           cmake -S native \
-                -B .build/android/${{ matrix.abi }} \
+                -B .build/android/${{ matrix.abi }}-${{ matrix.target }} \
                 -DCMAKE_TOOLCHAIN_FILE="${NDK_ROOT}/build/cmake/android.toolchain.cmake" \
                 -DANDROID_ABI=${{ matrix.abi }} \
                 -DANDROID_PLATFORM=android-24 \
@@ -138,12 +168,12 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build .build/android/${{ matrix.abi }} \
+          cmake --build .build/android/${{ matrix.abi }}-${{ matrix.target }} \
                 --config Release \
-                --target ferrum_test_stub
+                --target ${{ matrix.target }}
 
       - name: Upload .so artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-${{ matrix.abi }}
-          path: .build/android/${{ matrix.abi }}/libferrum_test_stub.so
+          name: android-${{ matrix.abi }}-${{ matrix.target }}
+          path: .build/android/${{ matrix.abi }}-${{ matrix.target }}/lib${{ matrix.target }}.so

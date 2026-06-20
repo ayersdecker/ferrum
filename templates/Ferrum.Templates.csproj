@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Packages the templates/maui-ferrum dotnet-new template as a NuGet so
+    consumers can install it with:
+
+        dotnet new install Ferrum.Templates
+
+    and then scaffold a new MAUI app wired up for Ferrum interop:
+
+        dotnet new maui-ferrum -n MyApp
+  -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+
+    <!-- Suppress "no output file" warning — this project produces only a NuGet -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <ContentTargetFolders>content</ContentTargetFolders>
+
+    <PackageId>Ferrum.Templates</PackageId>
+    <Version>0.1.0-alpha</Version>
+    <Authors>Ferrum Contributors</Authors>
+    <Description>
+      dotnet new templates for Ferrum — the domain-agnostic native-compute
+      framework for .NET MAUI. Scaffolds a MAUI app pre-wired for C/C++
+      interop via [LibraryImport] on iOS and Android.
+    </Description>
+    <PackageTags>templates;maui;ios;android;native;interop;pinvoke;nativeaot</PackageTags>
+    <RepositoryUrl>https://github.com/ayersdecker/ferrum</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <NoWarn>NU5128</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    The 'maui-ferrum' folder is the template content. The .template.config/
+    sub-folder is required by the dotnet new engine.
+  -->
+  <ItemGroup>
+    <Content Include="maui-ferrum\**\*" Exclude="maui-ferrum\**\[Bb]in\**;maui-ferrum\**\[Oo]bj\**">
+      <Pack>true</Pack>
+      <PackagePath>content\maui-ferrum</PackagePath>
+    </Content>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
