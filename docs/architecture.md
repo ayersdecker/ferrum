@@ -51,10 +51,11 @@ the consuming application provides the native library.
 
 | File / directory | Purpose |
 |---|---|
-| `native/CMakeLists.txt` | Top-level project; includes helpers, optionally builds the test stub |
+| `native/CMakeLists.txt` | Top-level project; includes helpers, optionally builds the test fixtures |
 | `native/cmake/ferrum_helpers.cmake` | `ferrum_add_static_library()` macro that sets common flags |
 | `native/cmake/ios.toolchain.cmake` | Minimal iOS cross-compilation toolchain (no external deps) |
 | `native/test_stub/` | Trivial `ferrum_add(int, int)` C library used to validate the pipeline |
+| `native/dsp_fixture/` | `ferrum_dsp_scale(float*, int32_t, float)` + `ferrum_dsp_stats(const float*, int32_t, FerrumDspStats*)` — validates the float-buffer and struct-out-param patterns |
 | `native/scripts/build_ios.sh` | Builds all three iOS slices and packages them as an XCFramework |
 | `native/scripts/build_android.sh` | Builds `.so` for all four Android ABIs using the NDK toolchain |
 
@@ -135,9 +136,14 @@ definitions.
    (source-generated at build time) instead of `[DllImport]` (which uses
    reflection at runtime). No `MarshalAs` attributes are emitted.
 
-3. **Simple, dependency-free parser.** The parser is a regex/tokenizer
-   approach — not a full C frontend. It handles the subset of C headers
-   needed for P/Invoke: function prototypes and POD structs.
+3. **Simple, dependency-free parser.** The parser is a strict tokenizer —
+   not a full C frontend. It handles the subset of C headers needed for
+   P/Invoke: function prototypes and POD structs. Anything it does not
+   recognise is rejected immediately (see constraint 1). A full libclang
+   integration was considered and rejected: it would add ~40–50 MB of native
+   binary dependencies to the dotnet tool package without materially improving
+   correctness within the blittable-only constraint. See
+   [open-questions.md](open-questions.md) item 5 for the full rationale.
 
 ### Supported C types
 
@@ -191,5 +197,8 @@ Indicators of scope creep (flag these in code review):
 - A function or type name references a specific application domain
   (audio, video, ML model name, etc.)
 - The codegen tool learns about specific library ABIs by name
-- Any native code beyond the trivial `ferrum_add()` test stub is added to
-  `native/test_stub/`
+- Any native code beyond the trivial test fixtures is added to `native/`
+
+The in-tree test fixtures (`test_stub/`, `dsp_fixture/`) are explicitly exempt
+from the scope rule — they exist solely to prove the framework plumbing works
+with different parameter patterns, not to implement any application logic.

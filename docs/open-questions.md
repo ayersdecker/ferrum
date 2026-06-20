@@ -20,11 +20,15 @@ template (e.g. `dotnet new ferrum`), or both?
 | Source template (`dotnet new ferrum`) | Complete skeleton delivered; consumer can customise everything | Harder to update; forks diverge |
 | Both | Best consumer experience | More maintenance surface |
 
-**Recommendation to discuss:** Start with a NuGet package for `Ferrum.Framework`
-and `Ferrum.Codegen` (dotnet tool), and add a source template in a future
-milestone once the API stabilises.
+**Resolution:** ✅ **Both** — implement NuGet for `Ferrum.Framework` and the
+`Ferrum.Codegen` dotnet tool first (already wired up in their respective
+`.csproj` files), then deliver a `dotnet new maui-ferrum` source template via
+`Ferrum.Templates` (see `templates/Ferrum.Templates.csproj`).
 
-**Status:** ⬜ Unresolved
+The NuGet packages are the primary distribution mechanism. The template scaffolds
+a fully configured starting point and is packaged alongside the NuGet packages.
+
+**Status:** ✅ Resolved — NuGet + source template, both wired up.
 
 ---
 
@@ -91,12 +95,24 @@ Fails loudly on unsupported constructs.
 
 **Arguments against (for now):**
 - Adds a native dependency (libclang) that complicates CI and the dotnet tool
-  distribution.
+  distribution (ClangSharp bundled binaries are ~40–50 MB per platform).
 - The current approach is sufficient for the stated use case (blittable types,
   simple function prototypes).
 
-**Status:** ⬜ Unresolved — revisit when a real consumer reports a header the
-  simple parser cannot handle.
+**Resolution:** ✅ **Keep the tokenizer.** The "fail loudly, never silently"
+design constraint is already fully satisfied by the current implementation:
+the parser throws a `CodegenException` on ANY unrecognised type, construct, or
+pattern — it never emits a binding it cannot verify. A regex parser that
+silently accepts bad input would violate this constraint; the Ferrum tokenizer
+does not.
+
+The primary use case for libclang — expanding preprocessor macros and resolving
+platform-conditional type aliases — is outside Ferrum's stated scope (blittable,
+macro-free public C APIs). If a real consumer reports a header the tokenizer
+cannot handle, revisit this decision at that point.
+
+**Status:** ✅ Resolved — tokenizer retained; revisit if a concrete consumer
+case arises that the tokenizer cannot handle.
 
 ---
 

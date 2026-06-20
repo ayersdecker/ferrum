@@ -9,6 +9,8 @@ on:
       - 'tools/codegen/**'
       - 'src/Framework/**'
       - 'src/Framework.Tests/**'
+      - 'native/test_stub/**'
+      - 'native/dsp_fixture/**'
       - '.github/workflows/codegen-tests.yml'
       - 'Directory.Build.props'
   pull_request:
@@ -16,6 +18,8 @@ on:
       - 'tools/codegen/**'
       - 'src/Framework/**'
       - 'src/Framework.Tests/**'
+      - 'native/test_stub/**'
+      - 'native/dsp_fixture/**'
       - '.github/workflows/codegen-tests.yml'
       - 'Directory.Build.props'
 
@@ -81,7 +85,7 @@ jobs:
       - name: Build codegen
         run: FerrumSkipMobile=true dotnet build tools/codegen/Ferrum.Codegen.csproj -c Release
 
-      - name: Run codegen on test stub header
+      - name: Run codegen on test stub header (ferrum_add)
         run: |
           FerrumSkipMobile=true dotnet run --project tools/codegen/Ferrum.Codegen.csproj \
             --configuration Release \
@@ -92,11 +96,32 @@ jobs:
             --class  AddBindings \
             --lib    __Internal
 
-      - name: Verify output
+      - name: Verify add.h output
         run: |
-          echo "=== Generated bindings ==="
+          echo "=== Generated bindings (add.h) ==="
           cat /tmp/AddBindings.cs
-          # Ensure [LibraryImport] and the function name are present
           grep -q "\[LibraryImport" /tmp/AddBindings.cs
           grep -q "ferrum_add"      /tmp/AddBindings.cs
-          echo "==> Smoke test passed"
+          echo "==> add.h smoke test passed"
+
+      - name: Run codegen on DSP fixture header (ferrum_dsp)
+        run: |
+          FerrumSkipMobile=true dotnet run --project tools/codegen/Ferrum.Codegen.csproj \
+            --configuration Release \
+            -- \
+            --input  native/dsp_fixture/include/ferrum_dsp.h \
+            --output /tmp/DspBindings.cs \
+            --ns     Ferrum.Generated \
+            --class  DspBindings \
+            --lib    __Internal
+
+      - name: Verify ferrum_dsp.h output
+        run: |
+          echo "=== Generated bindings (ferrum_dsp.h) ==="
+          cat /tmp/DspBindings.cs
+          grep -q "\[LibraryImport"      /tmp/DspBindings.cs
+          grep -q "ferrum_dsp_scale"     /tmp/DspBindings.cs
+          grep -q "ferrum_dsp_stats"     /tmp/DspBindings.cs
+          grep -q "FerrumDspStats"       /tmp/DspBindings.cs
+          grep -q "StructLayout"         /tmp/DspBindings.cs
+          echo "==> ferrum_dsp.h smoke test passed"

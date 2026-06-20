@@ -203,6 +203,63 @@ dotnet build samples/MinimalDemo/MinimalDemo.csproj -f net9.0-ios -c Release
 
 ---
 
+## NativeAOT on a real iOS device — manual verification
+
+> **TODO (issue):** Automated CI verification on a physical device is not
+> currently wired up. Physical device builds require a paid Apple Developer
+> account and provisioning profiles, which cannot be stored in a public
+> repository. Track this as a known gap until a self-hosted runner with a
+> provisioned device is available.
+
+Until automated CI coverage is in place, run the following steps manually
+whenever `NativeBuffer<T>` or the generated bindings change:
+
+### Prerequisites
+
+- macOS with Xcode 15+ and a valid iOS Developer provisioning profile
+- An iOS device running iOS 15.0 or later
+- .NET SDK 9.0 with the MAUI workload (`dotnet workload install maui`)
+
+### Steps
+
+1. **Build the native fixture:**
+
+   ```bash
+   ./native/scripts/build_ios.sh --target ferrum_test_stub
+   ./native/scripts/build_ios.sh --target ferrum_dsp_fixture
+   ```
+
+2. **Reference the XCFrameworks** in `samples/MinimalDemo/MinimalDemo.csproj`
+   (uncomment the `<NativeReference>` items).
+
+3. **Build in Release/NativeAOT mode for a physical device:**
+
+   ```bash
+   dotnet build samples/MinimalDemo/MinimalDemo.csproj \
+     -f net9.0-ios \
+     -c Release \
+     -p:RuntimeIdentifier=ios-arm64 \
+     -p:_BundlerExecutable=mtouch
+   ```
+
+4. **Install and run on the device.**  Open Xcode → Window → Devices and
+   Simulators, drag the `.ipa` to your device, and tap it.
+
+5. **Verify the following under NativeAOT** (check Xcode console output):
+   - `NativeBuffer<float>` pins memory and returns a non-null `TypedPointer`.
+   - `ferrum_add(3, 4)` returns `7`.
+   - `ferrum_dsp_scale` operates in-place on a float buffer without crashing.
+   - `ferrum_dsp_stats` fills a `FerrumDspStats` struct with correct values.
+   - No interpreter fallback messages appear (look for `Falling back to interpreter`
+     — there should be none).
+   - The app does not throw `MissingRuntimeArtifactException` or any
+     reflection-related exception.
+
+6. **Record the result** in the PR description, including the device model,
+   iOS version, and .NET SDK version used.
+
+---
+
 ## CMake integration in your own project
 
 If your native library has its own `CMakeLists.txt`, you can use the Ferrum

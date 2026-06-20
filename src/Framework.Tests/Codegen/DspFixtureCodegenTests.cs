@@ -236,7 +236,7 @@ void ferrum_dsp_stats(const float* buf, int32_t len, FerrumDspStats* result);
     /// </summary>
     private static string FindCommittedBindingsFile()
     {
-        string dir = AppContext.BaseDirectory;
+        string? dir = AppContext.BaseDirectory;
         while (!string.IsNullOrEmpty(dir))
         {
             string candidate = Path.Combine(
@@ -244,7 +244,7 @@ void ferrum_dsp_stats(const float* buf, int32_t len, FerrumDspStats* result);
                 "src", "Framework.Tests", "Codegen", "Generated", "FerrumDspBindings.cs");
             if (File.Exists(candidate))
                 return candidate;
-            dir = Path.GetDirectoryName(dir)!;
+            dir = Path.GetDirectoryName(dir);
         }
         throw new FileNotFoundException(
             "Cannot locate FerrumDspBindings.cs. "
