@@ -15,8 +15,18 @@ public partial class MainPage : ContentPage
         // This call crosses the managed/native boundary via [LibraryImport].
         // On iOS the symbol is resolved from the statically-linked XCFramework.
         // On Android it is loaded from libferrum_test_stub.so at runtime.
-        int result = AddInterop.ferrum_add(21, 21);
-        ResultLabel.Text = $"ferrum_add(21, 21) = {result}";
+        try
+        {
+            int result = AddInterop.ferrum_add(21, 21);
+            ResultLabel.Text = $"ferrum_add(21, 21) = {result}";
+        }
+        catch (DllNotFoundException ex)
+        {
+            ResultLabel.Text = "⚠️ Native library not found!\n\n" +
+                               "Android requires building native libraries first.\n" +
+                               "See ANDROID_BUILD_INSTRUCTIONS.md in repo root.\n\n" +
+                               $"Error: {ex.Message}";
+        }
     }
 
     private unsafe void OnBufferDemoClicked(object sender, EventArgs e)

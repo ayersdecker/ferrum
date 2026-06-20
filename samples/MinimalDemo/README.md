@@ -2,12 +2,22 @@
 
 This sample demonstrates a complete end-to-end .NET MAUI app using Ferrum to call native C code on iOS and Android.
 
+The Ferrum framework includes multiple native test fixtures to validate different patterns:
+- **test_stub**: Simple `ferrum_add(int, int)` function
+- **dsp_fixture**: Float buffer processing (`ferrum_dsp_scale`) and struct out-parameters (`ferrum_dsp_stats`)
+
+This sample uses the test_stub fixture to demonstrate the basic P/Invoke flow.
+
 ## What It Demonstrates
 
 1. **Simple P/Invoke**: Calling `ferrum_add(int, int)` from C via `[LibraryImport]`
 2. **Zero-copy buffers**: Using `NativeBuffer<T>` to pass pinned memory to native code
 3. **NativeAOT on iOS**: The sample is configured with `PublishAot=true` for iOS
 4. **Cross-platform native library integration**: XCFramework for iOS, `.so` files for Android
+
+> **Note:** The framework also includes a `dsp_fixture` that validates float buffer processing 
+> and struct out-parameters. See [docs/architecture.md](../../docs/architecture.md) for details 
+> on all test fixtures and their purposes.
 
 ## Project Structure
 
@@ -23,7 +33,7 @@ MinimalDemo/
 
 ## Prerequisites
 
-Before running this sample, you must build the native test stub for your target platform.
+Before running this sample, you must build the native test fixtures for your target platform.
 
 ### iOS
 
@@ -34,7 +44,7 @@ Requires macOS with Xcode 15+:
 ./native/scripts/build_ios.sh
 ```
 
-This produces `artifacts/ios/libferrum_test_stub.xcframework`.
+This produces `artifacts/ios/libferrum_test_stub.xcframework` (and `libferrum_dsp_fixture.xcframework`).
 
 ### Android
 
@@ -46,7 +56,7 @@ export ANDROID_NDK_HOME=/path/to/ndk  # e.g., ~/Library/Android/sdk/ndk/25.2.951
 ./native/scripts/build_android.sh
 ```
 
-This produces `.so` files in `artifacts/android/jniLibs/{arm64-v8a,armeabi-v7a,x86_64}/`.
+This produces `.so` files for both test fixtures in `artifacts/android/jniLibs/{arm64-v8a,armeabi-v7a,x86_64}/`.
 
 ## Building and Running
 
@@ -80,6 +90,8 @@ dotnet build -f net9.0-ios -t:Run
 ```
 
 ## How It Works
+
+This sample demonstrates the basic pattern using the `test_stub` fixture.
 
 ### 1. Native Library (`libferrum_test_stub`)
 

@@ -29,11 +29,11 @@ welcome.
 ## Repository Layout
 
 ```
-/native/                CMake project: iOS/Android toolchain files, test stub
+/native/                CMake project: iOS/Android toolchain files, test fixtures
 /tools/codegen/         ferrum-codegen — header-to-[LibraryImport] generator
 /src/Framework/         Ferrum.Framework C# library (NativeBuffer<T>, etc.)
 /src/Framework.Tests/   xUnit tests for the framework and codegen
-/samples/MinimalDemo/   End-to-end MAUI sample calling ferrum_add(int, int)
+/samples/MinimalDemo/   End-to-end MAUI sample calling native test functions
 /templates/maui-ferrum/ dotnet new template for scaffolding new Ferrum apps
 /docs/                  Architecture notes, getting-started guide, open questions
 .github/workflows/      CI: native build (iOS/Android), codegen tests, MAUI build
@@ -68,7 +68,7 @@ Clone this repository and run the MinimalDemo sample:
 git clone https://github.com/ayersdecker/ferrum.git
 cd ferrum
 
-# Build native test stub for your target platform
+# Build native test fixtures for your target platform
 # iOS (requires macOS + Xcode):
 ./native/scripts/build_ios.sh
 
@@ -238,10 +238,10 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ## Roadmap
 
-- [ ] NuGet package publication (v0.1.0-alpha in progress)
-- [ ] `dotnet new` project template for quick scaffolding
+- [x] NuGet package publication (`Ferrum.Framework` and `Ferrum.Codegen` dotnet tool)
+- [x] `dotnet new` project template for quick scaffolding (`maui-ferrum`)
+- [x] Codegen parser decision (tokenizer-based, fails loudly on unsupported constructs)
 - [ ] Windows and macOS desktop MAUI support
-- [ ] Advanced codegen with libclang integration
 - [ ] Community samples (audio processing, ML inference, computer vision)
 
 See [docs/open-questions.md](docs/open-questions.md) for detailed discussion on pending decisions.

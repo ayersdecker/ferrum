@@ -43,13 +43,12 @@
 
     Android: The shared libraries (.so) must be built first:
       ./native/scripts/build_android.sh
-    Then uncomment the AndroidNativeLibrary items below:
-
-    <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == 'Android'">
-      <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\artifacts\android\jniLibs\arm64-v8a\libferrum_test_stub.so" />
-      <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\artifacts\android\jniLibs\armeabi-v7a\libferrum_test_stub.so" />
-      <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\artifacts\android\jniLibs\x86_64\libferrum_test_stub.so" />
-    </ItemGroup>
   -->
+
+  <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == 'Android'">
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\artifacts\android\jniLibs\arm64-v8a\libferrum_test_stub.so" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\artifacts\android\jniLibs\armeabi-v7a\libferrum_test_stub.so" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\artifacts\android\jniLibs\x86_64\libferrum_test_stub.so" />
+  </ItemGroup>
 
 </Project>
