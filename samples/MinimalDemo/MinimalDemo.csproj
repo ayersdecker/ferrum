@@ -24,7 +24,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Framework\Ferrum.Framework.csproj" />
+    <ProjectReference Include="..\..\src\Framework\Ferrum.Framework.csproj">
+      <!-- Build only the TFM being targeted so an Android-only or iOS-only
+           build environment never tries to compile the other platform's TFM. -->
+      <SetTargetFramework>TargetFramework=$(TargetFramework)</SetTargetFramework>
+    </ProjectReference>
   </ItemGroup>
 
   <!--
